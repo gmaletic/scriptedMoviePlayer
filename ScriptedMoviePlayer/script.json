@@ -1,10 +1,10 @@
 {
-	"secondsToCycle" : 30,
+	"secondsToCycle" : 24,
 	"foundationImage" : "",
 	"script" :
 	[
 		{
-			"secondsOffset" : 5,
+			"secondsOffset" : 2,
 			"movie" : "eye"
 		}
 	]

@@ -11,6 +11,7 @@
 
 @interface ViewController ()
 @property AVPlayerViewController* avpvc;
+@property Script* currentScript;
 @end
 
 @implementation ViewController
@@ -25,9 +26,8 @@
 	
 	self.avpvc.view.frame = self.view.bounds;
 	[self.view addSubview:self.avpvc.view];
-	
-	Script* script = [[Script alloc] init];
-	[script process];
+
+	[self startScript];
 
 	[[NSNotificationCenter defaultCenter] addObserverForName:NOTIFICATION_NEW_PLAYER object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification* notification)
 	{
@@ -35,7 +35,44 @@
 		NSAssert(player, @"No player");
 		self.avpvc.player = player;
 		[self.avpvc.player play];
+		NSLog(@"PLAY");
 	}];
+	
+	// Allow user to restart the script if things seem out of sync.
+	UILongPressGestureRecognizer* restartScriptGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(recognizeRestartGesture:)];
+	restartScriptGestureRecognizer.numberOfTouchesRequired = 1;
+	restartScriptGestureRecognizer.minimumPressDuration = 3;
+	[self.avpvc.view addGestureRecognizer:restartScriptGestureRecognizer];
+}
+
+- (void)recognizeRestartGesture:(UIGestureRecognizer*)gr
+{
+	if (gr.state == UIGestureRecognizerStateBegan)
+	{
+		[self startScript];
+	}
+}
+
+- (void)startScript
+{
+	NSLog(@"STARTING…");
+	
+	[self.avpvc.player pause];
+	self.avpvc.player = nil;
+	
+	self.currentScript = [[Script alloc] initWithScriptFile:@"script"];
+	[self.currentScript process];
+	
+	[self flashScreen];
+}
+
+- (void)flashScreen
+{
+	self.avpvc.contentOverlayView.backgroundColor = [UIColor greenColor];
+	[UIView animateWithDuration:1 animations:^
+	 {
+		 self.avpvc.contentOverlayView.backgroundColor = [UIColor clearColor];
+	 }];
 }
 
 - (void)didReceiveMemoryWarning {

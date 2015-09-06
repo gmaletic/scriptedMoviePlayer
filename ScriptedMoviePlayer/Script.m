@@ -10,18 +10,51 @@
 
 @interface Script ()
 @property (readwrite) AVPlayer* avPlayer;
+@property NSString* scriptFileName;
+@property NSMutableArray* timers;
 @end
 
 @implementation Script
 
+- (instancetype)initWithScriptFile:(NSString *)scriptFileName
+{
+	if ((self = [super init]))
+	{
+		_timers = [NSMutableArray array];
+		_scriptFileName = scriptFileName;
+	}
+	
+	return self;
+}
+
+- (instancetype)init
+{
+	NSAssert(NO, @"Use initWithScriptFile:");
+	return nil;
+}
+
+- (void)dealloc
+{
+	[self stopTimers];
+}
+
+- (void)stopTimers
+{
+	// Stop all timers.
+	for (NSTimer* timer in self.timers)
+	{
+		[timer invalidate];
+	}
+}
+
 - (void)process
 {
-	[self processScriptFile:DEFAULT_SCRIPT_FILENAME];
+	[self processScriptFile:self.scriptFileName];
 }
 
 - (void)processScriptFile:(NSString *)scriptFileName
 {
-	NSString* scriptPath = [[NSBundle mainBundle] pathForResource:DEFAULT_SCRIPT_FILENAME ofType:@"json"];
+	NSString* scriptPath = [[NSBundle mainBundle] pathForResource:scriptFileName ofType:@"json"];
 	NSAssert(scriptPath, @"Script not found");
 	
 	// Load script JSON
@@ -58,12 +91,16 @@
 		
 		// Start the repeating timer that kicks off the movie.
 		NSTimeInterval delay = [self intervalUntilCycleTime:cycleTime] + offset;
-		NSLog(@"delay = %g", delay);
+		NSLog(@"Play %@ every %g seconds after %g delay.", movieFileName, cycleTime, delay);
+		
+		__weak Script* weakSelf = self;
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
 		{
 			NSDictionary* userInfo = @{ TAG_MOVIE : movieFileName };
-			NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:cycleTime target:self selector:@selector(startMovie:) userInfo:userInfo repeats:YES];
+			NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:cycleTime target:weakSelf selector:@selector(startMovie:) userInfo:userInfo repeats:YES];
 			[timer fire];
+			
+			[weakSelf.timers addObject:timer];
 		});
 	}
 }
@@ -79,10 +116,12 @@
 {
 	// Play movie.
 	NSString* moviePath = [[NSBundle mainBundle] pathForResource:timer.userInfo[TAG_MOVIE] ofType:@"mov"];
+	NSLog(@"Kicking off movie %@…", moviePath);
 	BOOL movieExists = [[NSFileManager defaultManager] fileExistsAtPath:moviePath];
 	NSAssert(movieExists, @"Movie at %@ doesn't exist!", moviePath);
 	NSURL* movieURL = [NSURL fileURLWithPath:moviePath];
 	self.avPlayer = [AVPlayer playerWithURL:movieURL];
+	
 	[[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_PLAYER object:nil userInfo:@{ USERINFO_KEY_PLAYER : self.avPlayer} ];
 }
 

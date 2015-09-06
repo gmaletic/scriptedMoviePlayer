@@ -10,8 +10,6 @@
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
 
-#define DEFAULT_SCRIPT_FILENAME @"script"
-
 #define TAG_CYCLE @"secondsToCycle"
 #define TAG_FOUNDATION_IMAGE @"foundationImage"
 #define TAG_SCRIPT @"script"
@@ -26,7 +24,7 @@
 @property UIImage* foundationImage;
 @property (readonly) AVPlayer* avPlayer;
 
+- (instancetype)initWithScriptFile:(NSString*)scriptFileName;
 - (void)process;
-- (void)processScriptFile:(NSString*)scriptFileName;
 
 @end
