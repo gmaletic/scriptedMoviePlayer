@@ -23,6 +23,9 @@
 	{
 		_timers = [NSMutableArray array];
 		_scriptFileName = scriptFileName;
+		
+		// Get notified in case the brightness changes, so we can change it ourselves.
+		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(affectScreenBrightness) name:UIScreenBrightnessDidChangeNotification object:nil];
 	}
 	
 	return self;
@@ -36,7 +39,14 @@
 
 - (void)dealloc
 {
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[self stopTimers];
+}
+
+- (void)affectScreenBrightness
+{
+	[[UIScreen mainScreen] setWantsSoftwareDimming:YES];
+	[[UIScreen mainScreen] setBrightness:self.brightness];
 }
 
 - (void)stopTimers
@@ -83,8 +93,8 @@
 	NSNumber* brightnessNumber = scriptJson[TAG_BRIGHTNESS];
 	if (brightnessNumber)
 	{
-		[[UIScreen mainScreen] setWantsSoftwareDimming:YES];
-		[[UIScreen mainScreen] setBrightness:[brightnessNumber floatValue]];
+		self.brightness = [brightnessNumber floatValue];
+		[self affectScreenBrightness];
 	}
 	
 	// Create timers
@@ -130,6 +140,10 @@
 	NSAssert(movieExists, @"Movie at %@ doesn't exist!", moviePath);
 	NSURL* movieURL = [NSURL fileURLWithPath:moviePath];
 	self.avPlayer = [AVPlayer playerWithURL:movieURL];
+	
+	AVPlayerItem* current = self.avPlayer.currentItem;
+	NSAssert(current, nil);
+	NSLog(@"%d %d %d %d %d", current.canPlayFastForward, current.canPlayFastReverse, current.canPlayReverse, current.canPlaySlowForward, current.canPlaySlowReverse);
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_PLAYER object:nil userInfo:@{ USERINFO_KEY_PLAYER : self.avPlayer} ];
 }
