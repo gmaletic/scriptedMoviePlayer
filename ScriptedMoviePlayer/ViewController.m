@@ -40,7 +40,7 @@
 	
 	// Allow user to restart the script if things seem out of sync.
 	UILongPressGestureRecognizer* restartScriptGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(recognizeRestartGesture:)];
-	restartScriptGestureRecognizer.numberOfTouchesRequired = 1;
+	restartScriptGestureRecognizer.numberOfTouchesRequired = 2;
 	restartScriptGestureRecognizer.minimumPressDuration = 3;
 	[self.avpvc.view addGestureRecognizer:restartScriptGestureRecognizer];
 }
