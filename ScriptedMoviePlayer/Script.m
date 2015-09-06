@@ -10,6 +10,7 @@
 
 @interface Script ()
 @property (readwrite) AVPlayer* avPlayer;
+@property (readwrite) CGFloat brightness;
 @property NSString* scriptFileName;
 @property NSMutableArray* timers;
 @end
@@ -76,6 +77,14 @@
 	{
 		self.foundationImage = [UIImage imageNamed:foundationImageName];
 		NSAssert(self.foundationImage, @"Couldn't find foundation image at %@", foundationImageName);
+	}
+	
+	// Load brightness.
+	NSNumber* brightnessNumber = scriptJson[TAG_BRIGHTNESS];
+	if (brightnessNumber)
+	{
+		[[UIScreen mainScreen] setWantsSoftwareDimming:YES];
+		[[UIScreen mainScreen] setBrightness:[brightnessNumber floatValue]];
 	}
 	
 	// Create timers

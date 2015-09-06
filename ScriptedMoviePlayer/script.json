@@ -1,4 +1,5 @@
 {
+	"brightness" : 0.1,
 	"secondsToCycle" : 24,
 	"foundationImage" : "",
 	"script" :

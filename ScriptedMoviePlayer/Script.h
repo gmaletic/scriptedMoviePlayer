@@ -15,6 +15,7 @@
 #define TAG_SCRIPT @"script"
 #define TAG_OFFSET @"secondsOffset"
 #define TAG_MOVIE @"movie"
+#define TAG_BRIGHTNESS @"brightness"
 
 #define NOTIFICATION_NEW_PLAYER @"newPlayer"
 #define USERINFO_KEY_PLAYER @"player"
