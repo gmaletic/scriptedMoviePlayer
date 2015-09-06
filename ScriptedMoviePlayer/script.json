@@ -1,5 +1,6 @@
 {
-	"brightness" : 0.1,
+	"screen-brightness" : 0.1,
+	"overlay-alpha" : 0,
 	"secondsToCycle" : 24,
 	"foundationImage" : "",
 	"script" :

@@ -12,22 +12,25 @@
 @interface ViewController ()
 @property AVPlayerViewController* avpvc;
 @property Script* currentScript;
+@property UIColor* desiredOverlayColor;
 @end
 
 @implementation ViewController
 
+- (void)dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
 	
 	self.avpvc = [[AVPlayerViewController alloc] init];
 	self.avpvc.showsPlaybackControls = NO;
 	
 	self.avpvc.view.frame = self.view.bounds;
 	[self.view addSubview:self.avpvc.view];
-
-	[self startScript];
 
 	[[NSNotificationCenter defaultCenter] addObserverForName:NOTIFICATION_NEW_PLAYER object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification* notification)
 	{
@@ -43,6 +46,12 @@
 	restartScriptGestureRecognizer.numberOfTouchesRequired = 2;
 	restartScriptGestureRecognizer.minimumPressDuration = 3;
 	[self.avpvc.view addGestureRecognizer:restartScriptGestureRecognizer];
+	
+	// Get notified in case the brightness changes, so we can change it ourselves.
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(affectScreenBrightness) name:UIScreenBrightnessDidChangeNotification object:nil];
+
+	// Kick everyting off.
+	[self startScript];
 }
 
 - (void)recognizeRestartGesture:(UIGestureRecognizer*)gr
@@ -63,7 +72,52 @@
 	self.currentScript = [[Script alloc] initWithScriptFile:@"script"];
 	[self.currentScript process];
 	
+	// Take some actions based on the script.
+	// Load brightness.
+	[self affectScreenBrightness];
+
+	// Do we need to enable the overlay?
+	[self enableOverlay];
+	
+	// Show the user we're starting.
 	[self flashScreen];
+}
+
+- (void)affectScreenBrightness
+{
+	NSNumber* brightnessNumber = self.currentScript.scriptJson[TAG_BRIGHTNESS];
+	if (brightnessNumber)
+	{
+		CGFloat brightness = [brightnessNumber floatValue];
+		[[UIScreen mainScreen] setWantsSoftwareDimming:YES];
+		[[UIScreen mainScreen] setBrightness:brightness];
+	}
+	else
+	{
+		[[UIScreen mainScreen] setWantsSoftwareDimming:NO];
+	}
+}
+
+- (void)enableOverlay
+{
+	NSNumber* overlayNumber = self.currentScript.scriptJson[TAG_OVERLAY_ALPHA];
+	if (overlayNumber)
+	{
+		CGFloat overlayAlpha = [overlayNumber floatValue];
+		if (overlayAlpha > 0)
+		{
+			self.desiredOverlayColor = [UIColor colorWithWhite:0 alpha:overlayAlpha];
+		}
+		else
+		{
+			self.desiredOverlayColor = nil;
+		}
+	}
+	else
+	{
+		self.desiredOverlayColor = nil;
+	}
+	self.avpvc.contentOverlayView.backgroundColor = self.desiredOverlayColor;
 }
 
 - (void)flashScreen
@@ -71,7 +125,7 @@
 	self.avpvc.contentOverlayView.backgroundColor = [UIColor greenColor];
 	[UIView animateWithDuration:1 animations:^
 	 {
-		 self.avpvc.contentOverlayView.backgroundColor = [UIColor clearColor];
+		 self.avpvc.contentOverlayView.backgroundColor = self.desiredOverlayColor;
 	 }];
 }
 

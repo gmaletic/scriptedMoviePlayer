@@ -16,6 +16,7 @@
 #define TAG_OFFSET @"secondsOffset"
 #define TAG_MOVIE @"movie"
 #define TAG_BRIGHTNESS @"brightness"
+#define TAG_OVERLAY_ALPHA @"overlay-alpha"
 
 #define NOTIFICATION_NEW_PLAYER @"newPlayer"
 #define USERINFO_KEY_PLAYER @"player"
@@ -24,6 +25,7 @@
 
 @property UIImage* foundationImage;
 @property (readonly) AVPlayer* avPlayer;
+@property (readonly) NSDictionary* scriptJson;
 
 - (instancetype)initWithScriptFile:(NSString*)scriptFileName;
 - (void)process;

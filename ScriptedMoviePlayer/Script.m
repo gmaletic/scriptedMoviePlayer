@@ -10,9 +10,9 @@
 
 @interface Script ()
 @property (readwrite) AVPlayer* avPlayer;
-@property (readwrite) CGFloat brightness;
 @property NSString* scriptFileName;
 @property NSMutableArray* timers;
+@property (readwrite) NSDictionary* scriptJson;
 @end
 
 @implementation Script
@@ -23,9 +23,6 @@
 	{
 		_timers = [NSMutableArray array];
 		_scriptFileName = scriptFileName;
-		
-		// Get notified in case the brightness changes, so we can change it ourselves.
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(affectScreenBrightness) name:UIScreenBrightnessDidChangeNotification object:nil];
 	}
 	
 	return self;
@@ -39,14 +36,7 @@
 
 - (void)dealloc
 {
-	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[self stopTimers];
-}
-
-- (void)affectScreenBrightness
-{
-	[[UIScreen mainScreen] setWantsSoftwareDimming:YES];
-	[[UIScreen mainScreen] setBrightness:self.brightness];
 }
 
 - (void)stopTimers
@@ -89,14 +79,6 @@
 		NSAssert(self.foundationImage, @"Couldn't find foundation image at %@", foundationImageName);
 	}
 	
-	// Load brightness.
-	NSNumber* brightnessNumber = scriptJson[TAG_BRIGHTNESS];
-	if (brightnessNumber)
-	{
-		self.brightness = [brightnessNumber floatValue];
-		[self affectScreenBrightness];
-	}
-	
 	// Create timers
 	NSArray* scriptElements = scriptJson[TAG_SCRIPT];
 	for (NSDictionary* scriptElement in scriptElements)
@@ -122,6 +104,8 @@
 			[weakSelf.timers addObject:timer];
 		});
 	}
+	
+	self.scriptJson = scriptJson;
 }
 
 - (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime
