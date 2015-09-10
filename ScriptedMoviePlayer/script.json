@@ -14,7 +14,8 @@
 	},
 	"LeftEye" :
 	{
-		"overlay-image" : "leftOverlay"
+		"overlay-image" : "leftOverlay",
+		"screen-brightness" : 1.0
 	},
 	"RightEye" :
 	{

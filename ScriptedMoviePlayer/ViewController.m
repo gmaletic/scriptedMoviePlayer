@@ -116,7 +116,7 @@
 
 - (void)affectScreenBrightnessUsingScript:(Script*)script
 {
-	NSNumber* brightnessNumber = script.scriptJson[TAG_BRIGHTNESS];
+	NSNumber* brightnessNumber = script.deviceJson[TAG_BRIGHTNESS];
 	if (brightnessNumber)
 	{
 		CGFloat brightness = [brightnessNumber floatValue];
@@ -131,7 +131,7 @@
 
 - (void)enableOverlayUsingScript:(Script*)script
 {
-	NSNumber* overlayNumber = script.scriptJson[TAG_OVERLAY_ALPHA];
+	NSNumber* overlayNumber = script.deviceJson[TAG_OVERLAY_ALPHA];
 	if (overlayNumber)
 	{
 		CGFloat overlayAlpha = [overlayNumber floatValue];

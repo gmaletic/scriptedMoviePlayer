@@ -67,15 +67,15 @@
 	NSAssert(scriptData, @"No script loaded from %@", scriptPath);
 	
 	NSError* jsonError;
-	NSDictionary* scriptJson = [NSJSONSerialization JSONObjectWithData:scriptData options:0 error:&jsonError];
-	NSAssert(scriptJson, @"No scriptJson loaded.");
+	NSDictionary* allTheJSON = [NSJSONSerialization JSONObjectWithData:scriptData options:0 error:&jsonError];
+	NSAssert(allTheJSON, @"No JSON loaded.");
 	
 	// Get the JSON that is used by all devices.
-	NSMutableDictionary* deviceSpecificJson = [scriptJson[TAG_ALL_DEVICES] mutableCopy];
+	NSMutableDictionary* deviceSpecificJson = [allTheJSON[TAG_ALL_DEVICES] mutableCopy];
 	
 	// Overlay overridden attributes onto scriptJson dictionary.
 	NSString* thisDeviceName = [[UIDevice currentDevice] name];
-	NSDictionary* overridesJson = scriptJson[thisDeviceName];
+	NSDictionary* overridesJson = allTheJSON[thisDeviceName];
 
 	// Go through each attribute and add it into the device JSON.
 	for (id key in [overridesJson allKeys])
@@ -84,16 +84,13 @@
 		deviceSpecificJson[key] = value;
 	}
 	
-	// Make this accessible to the outside world.
-	self.deviceJson = deviceSpecificJson;
-	
 	// Load cycle time.
-	NSNumber* jsonCycleTime = scriptJson[TAG_CYCLE];
+	NSNumber* jsonCycleTime = deviceSpecificJson[TAG_CYCLE];
 	NSAssert(jsonCycleTime, @"Need to specify '%@' attribute at top level of script file named %@.", TAG_CYCLE, scriptFileName);
 	NSTimeInterval cycleTime = [jsonCycleTime doubleValue];
 	
 	// Create timers
-	NSArray* scriptElements = scriptJson[TAG_SCRIPT];
+	NSArray* scriptElements = deviceSpecificJson[TAG_SCRIPT];
 	for (NSDictionary* scriptElement in scriptElements)
 	{
 		NSNumber* offsetNumber = scriptElement[TAG_OFFSET];
@@ -117,6 +114,9 @@
 			[weakSelf.timers addObject:timer];
 		});
 	}
+	
+	// Make this accessible to the outside world.
+	self.deviceJson = deviceSpecificJson;
 }
 
 - (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime baseTime:(NSTimeInterval)baseTime
