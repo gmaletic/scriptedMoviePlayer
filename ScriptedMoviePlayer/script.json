@@ -1,13 +1,23 @@
 {
-	"screen-brightness" : 0.1,
-	"overlay-alpha" : 0,
-	"secondsToCycle" : 20,
-	"foundationImage" : "",
-	"script" :
-	[
-		{
-			"secondsOffset" : 0,
-			"movie" : "eye"
-		}
-	]
+	"*" :
+	{
+		"screen-brightness" : 0.1,
+		"seconds-to-cycle" : 20,
+		"foundation-image" : "",
+		"script" :
+		[
+			{
+				"seconds-offset" : 0,
+				"movie" : "eye"
+			}
+		]
+	},
+	"LeftEye" :
+	{
+		"overlay-image" : "leftOverlay"
+	},
+	"RightEye" :
+	{
+		"overlay-image" : "rightOverlay"
+	}
 }

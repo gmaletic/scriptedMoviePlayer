@@ -12,7 +12,7 @@
 @property (readwrite) AVPlayer* avPlayer;
 @property NSString* scriptFileName;
 @property NSMutableArray* timers;
-@property (readwrite) NSDictionary* scriptJson;
+@property (readwrite) NSDictionary* deviceJson;
 @end
 
 #define TIME_INTERVAL_START_AFTER_SYNC 2
@@ -70,18 +70,27 @@
 	NSDictionary* scriptJson = [NSJSONSerialization JSONObjectWithData:scriptData options:0 error:&jsonError];
 	NSAssert(scriptJson, @"No scriptJson loaded.");
 	
+	// Get the JSON that is used by all devices.
+	NSMutableDictionary* deviceSpecificJson = [scriptJson[TAG_ALL_DEVICES] mutableCopy];
+	
+	// Overlay overridden attributes onto scriptJson dictionary.
+	NSString* thisDeviceName = [[UIDevice currentDevice] name];
+	NSDictionary* overridesJson = scriptJson[thisDeviceName];
+
+	// Go through each attribute and add it into the device JSON.
+	for (id key in [overridesJson allKeys])
+	{
+		id value = overridesJson[key];
+		deviceSpecificJson[key] = value;
+	}
+	
+	// Make this accessible to the outside world.
+	self.deviceJson = deviceSpecificJson;
+	
 	// Load cycle time.
 	NSNumber* jsonCycleTime = scriptJson[TAG_CYCLE];
 	NSAssert(jsonCycleTime, @"Need to specify '%@' attribute at top level of script file named %@.", TAG_CYCLE, scriptFileName);
 	NSTimeInterval cycleTime = [jsonCycleTime doubleValue];
-	
-	// Load foundation image.
-	NSString* foundationImageName = scriptJson[TAG_FOUNDATION_IMAGE];
-	if (foundationImageName.length > 0)
-	{
-		self.foundationImage = [UIImage imageNamed:foundationImageName];
-		NSAssert(self.foundationImage, @"Couldn't find foundation image at %@", foundationImageName);
-	}
 	
 	// Create timers
 	NSArray* scriptElements = scriptJson[TAG_SCRIPT];
@@ -108,8 +117,6 @@
 			[weakSelf.timers addObject:timer];
 		});
 	}
-	
-	self.scriptJson = scriptJson;
 }
 
 - (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime baseTime:(NSTimeInterval)baseTime
