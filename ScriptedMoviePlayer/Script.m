@@ -15,6 +15,8 @@
 @property (readwrite) NSDictionary* scriptJson;
 @end
 
+#define TIME_INTERVAL_START_AFTER_SYNC 2
+
 @implementation Script
 
 - (instancetype)initWithScriptFile:(NSString *)scriptFileName withSyncTime:(NSTimeInterval)synctime
@@ -99,7 +101,7 @@
 		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
 		{
 			NSDictionary* userInfo = @{ TAG_MOVIE : movieFileName };
-			NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:cycleTime target:weakSelf selector:@selector(startMovie:) userInfo:userInfo repeats:YES];
+			__weak NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:cycleTime target:weakSelf selector:@selector(startMovie:) userInfo:userInfo repeats:YES];
 			[timer fire];
 			
 			[weakSelf.timers addObject:timer];
@@ -111,9 +113,8 @@
 
 - (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime baseTime:(NSTimeInterval)baseTime
 {
-	NSAssert(self.synctime, nil);
 	NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
-	NSTimeInterval timeUntil = cycleTime - fmod(now - baseTime, cycleTime);
+	NSTimeInterval timeUntil = cycleTime - fmod(now - baseTime + (cycleTime - TIME_INTERVAL_START_AFTER_SYNC), cycleTime);
 	return timeUntil;
 }
 
@@ -126,10 +127,6 @@
 	NSAssert(movieExists, @"Movie at %@ doesn't exist!", moviePath);
 	NSURL* movieURL = [NSURL fileURLWithPath:moviePath];
 	self.avPlayer = [AVPlayer playerWithURL:movieURL];
-	
-	AVPlayerItem* current = self.avPlayer.currentItem;
-	NSAssert(current, nil);
-	NSLog(@"%d %d %d %d %d", current.canPlayFastForward, current.canPlayFastReverse, current.canPlayReverse, current.canPlaySlowForward, current.canPlaySlowReverse);
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_NEW_PLAYER object:nil userInfo:@{ USERINFO_KEY_PLAYER : self.avPlayer} ];
 }
