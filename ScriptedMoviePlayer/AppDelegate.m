@@ -20,6 +20,9 @@
 	// Turn off status bar.
 	application.statusBarHidden = YES;
 	
+	// Turn off idle timer.
+	[[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+	
 	return YES;
 }
 
