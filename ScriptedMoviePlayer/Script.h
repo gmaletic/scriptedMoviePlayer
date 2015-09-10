@@ -30,5 +30,6 @@
 
 - (instancetype)initWithScriptFile:(NSString*)scriptFileName withSyncTime:(NSTimeInterval)synctime;
 - (void)process;
+- (void)stopTimers;
 
 @end

@@ -49,6 +49,7 @@
 	{
 		[timer invalidate];
 	}
+	[self.timers removeAllObjects];
 }
 
 - (void)process

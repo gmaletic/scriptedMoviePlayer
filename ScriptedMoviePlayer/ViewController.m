@@ -93,6 +93,7 @@
 	[self.avpvc.player pause];
 	self.avpvc.player = nil;
 	
+	[self.currentScript stopTimers];
 	self.currentScript = nil;
 	Script* script = [[Script alloc] initWithScriptFile:@"script" withSyncTime:synctime];
 	[script process];
