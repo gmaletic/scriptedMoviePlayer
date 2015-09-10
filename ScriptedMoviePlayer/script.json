@@ -1,12 +1,12 @@
 {
 	"screen-brightness" : 0.1,
 	"overlay-alpha" : 0,
-	"secondsToCycle" : 24,
+	"secondsToCycle" : 20,
 	"foundationImage" : "",
 	"script" :
 	[
 		{
-			"secondsOffset" : 2,
+			"secondsOffset" : 0,
 			"movie" : "eye"
 		}
 	]

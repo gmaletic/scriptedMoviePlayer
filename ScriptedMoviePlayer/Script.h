@@ -26,8 +26,9 @@
 @property UIImage* foundationImage;
 @property (readonly) AVPlayer* avPlayer;
 @property (readonly) NSDictionary* scriptJson;
+@property NSTimeInterval synctime;
 
-- (instancetype)initWithScriptFile:(NSString*)scriptFileName;
+- (instancetype)initWithScriptFile:(NSString*)scriptFileName withSyncTime:(NSTimeInterval)synctime;
 - (void)process;
 
 @end

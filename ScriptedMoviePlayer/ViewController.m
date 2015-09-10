@@ -13,6 +13,7 @@
 @property AVPlayerViewController* avpvc;
 @property Script* currentScript;
 @property UIColor* desiredOverlayColor;
+//@property UILabel* timeLabel;
 @end
 
 @implementation ViewController
@@ -26,66 +27,94 @@
 {
 	[super viewDidLoad];
 	
+	// Create the movie player view controller and add it to the screen.
 	self.avpvc = [[AVPlayerViewController alloc] init];
 	self.avpvc.showsPlaybackControls = NO;
 	
 	self.avpvc.view.frame = self.view.bounds;
 	[self.view addSubview:self.avpvc.view];
 
+	// Find out when there is a new player that has content to display.
 	[[NSNotificationCenter defaultCenter] addObserverForName:NOTIFICATION_NEW_PLAYER object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification* notification)
 	{
 		AVPlayer* player = notification.userInfo[USERINFO_KEY_PLAYER];
 		NSAssert(player, @"No player");
 		self.avpvc.player = player;
 		[self.avpvc.player play];
+//		self.timeLabel.text = [NSString stringWithFormat:@"%f", [NSDate timeIntervalSinceReferenceDate]];
 		NSLog(@"PLAY");
 	}];
 	
 	// Allow user to restart the script if things seem out of sync.
-	UILongPressGestureRecognizer* restartScriptGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(recognizeRestartGesture:)];
-	restartScriptGestureRecognizer.numberOfTouchesRequired = 2;
-	restartScriptGestureRecognizer.minimumPressDuration = 3;
-	[self.avpvc.view addGestureRecognizer:restartScriptGestureRecognizer];
+	UILongPressGestureRecognizer* resyncScriptGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(recognizeRestartGesture:)];
+	resyncScriptGestureRecognizer.numberOfTouchesRequired = 1;
+	resyncScriptGestureRecognizer.minimumPressDuration = 3;
+	[self.avpvc.view addGestureRecognizer:resyncScriptGestureRecognizer];
 	
 	// Get notified in case the brightness changes, so we can change it ourselves.
 	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(affectScreenBrightness) name:UIScreenBrightnessDidChangeNotification object:nil];
 
+//	// Add a time label to the screen.
+//	self.timeLabel = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 200, 15)];
+//	self.timeLabel.textColor = [UIColor whiteColor];
+//	self.timeLabel.text = @"Time";
+//	[self.view addSubview:self.timeLabel];
+
 	// Kick everyting off.
-	[self startScript];
+	[self startScriptWithSynctime:[NSDate timeIntervalSinceReferenceDate]];
 }
+
+//- (void)recordTimeGestureRecognized:(UIGestureRecognizer*)gr
+//{
+//	if (gr.state == UIGestureRecognizerStateBegan)
+//	{
+//		self.syncTime = [NSDate date];
+//	}
+//}
 
 - (void)recognizeRestartGesture:(UIGestureRecognizer*)gr
 {
 	if (gr.state == UIGestureRecognizerStateBegan)
 	{
-		[self startScript];
+		// Flash to tell user that their gesture has been recognized.
+		[self flashScreen];
+	}
+	else if (gr.state == UIGestureRecognizerStateEnded)
+	{
+		// Do the sync.
+		[self startScriptWithSynctime:[NSDate timeIntervalSinceReferenceDate]];
 	}
 }
 
-- (void)startScript
+- (void)startScriptWithSynctime:(NSTimeInterval)synctime
 {
-	NSLog(@"STARTING…");
+	NSLog(@"RESYNCING…");
 	
 	[self.avpvc.player pause];
 	self.avpvc.player = nil;
 	
-	self.currentScript = [[Script alloc] initWithScriptFile:@"script"];
-	[self.currentScript process];
+	Script* script = [[Script alloc] initWithScriptFile:@"script" withSyncTime:synctime];
+	[script process];
 	
 	// Take some actions based on the script.
 	// Load brightness.
-	[self affectScreenBrightness];
+	[self affectScreenBrightnessUsingScript:script];
 
 	// Do we need to enable the overlay?
-	[self enableOverlay];
+	[self enableOverlayUsingScript:script];
 	
-	// Show the user we're starting.
-	[self flashScreen];
+	// Hold on to this.
+	self.currentScript = script;
 }
 
 - (void)affectScreenBrightness
 {
-	NSNumber* brightnessNumber = self.currentScript.scriptJson[TAG_BRIGHTNESS];
+	[self affectScreenBrightnessUsingScript:self.currentScript];
+}
+
+- (void)affectScreenBrightnessUsingScript:(Script*)script
+{
+	NSNumber* brightnessNumber = script.scriptJson[TAG_BRIGHTNESS];
 	if (brightnessNumber)
 	{
 		CGFloat brightness = [brightnessNumber floatValue];
@@ -98,9 +127,9 @@
 	}
 }
 
-- (void)enableOverlay
+- (void)enableOverlayUsingScript:(Script*)script
 {
-	NSNumber* overlayNumber = self.currentScript.scriptJson[TAG_OVERLAY_ALPHA];
+	NSNumber* overlayNumber = script.scriptJson[TAG_OVERLAY_ALPHA];
 	if (overlayNumber)
 	{
 		CGFloat overlayAlpha = [overlayNumber floatValue];

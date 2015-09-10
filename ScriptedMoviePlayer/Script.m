@@ -17,12 +17,13 @@
 
 @implementation Script
 
-- (instancetype)initWithScriptFile:(NSString *)scriptFileName
+- (instancetype)initWithScriptFile:(NSString *)scriptFileName withSyncTime:(NSTimeInterval)synctime
 {
 	if ((self = [super init]))
 	{
 		_timers = [NSMutableArray array];
 		_scriptFileName = scriptFileName;
+		_synctime = synctime;
 	}
 	
 	return self;
@@ -91,7 +92,7 @@
 		NSAssert(movieFileName, @"Need a '%@' tag in each script element.", TAG_MOVIE);
 		
 		// Start the repeating timer that kicks off the movie.
-		NSTimeInterval delay = [self intervalUntilCycleTime:cycleTime] + offset;
+		NSTimeInterval delay = [self intervalUntilCycleTime:cycleTime baseTime:self.synctime] + offset;
 		NSLog(@"Play %@ every %g seconds after %g delay.", movieFileName, cycleTime, delay);
 		
 		__weak Script* weakSelf = self;
@@ -108,10 +109,11 @@
 	self.scriptJson = scriptJson;
 }
 
-- (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime
+- (NSTimeInterval)intervalUntilCycleTime:(NSTimeInterval)cycleTime baseTime:(NSTimeInterval)baseTime
 {
-	NSTimeInterval nowInterval = [NSDate timeIntervalSinceReferenceDate];
-	NSTimeInterval timeUntil = fmod(nowInterval, cycleTime);
+	NSAssert(self.synctime, nil);
+	NSTimeInterval now = [NSDate timeIntervalSinceReferenceDate];
+	NSTimeInterval timeUntil = cycleTime - fmod(now - baseTime, cycleTime);
 	return timeUntil;
 }
 
