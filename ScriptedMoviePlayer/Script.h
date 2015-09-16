@@ -18,7 +18,9 @@
 #define TAG_OFFSET @"seconds-offset"
 #define TAG_MOVIE @"movie"
 #define TAG_BRIGHTNESS @"screen-brightness"
-#define TAG_OVERLAY_ALPHA @"overlay-image"
+#define TAG_OVERLAY_IMAGE @"overlay-image"
+#define TAG_OFFSET_X @"offset-x"
+#define TAG_OFFSET_Y @"offset-y"
 
 #define NOTIFICATION_NEW_PLAYER @"newPlayer"
 #define USERINFO_KEY_PLAYER @"player"

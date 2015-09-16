@@ -13,6 +13,7 @@
 @property AVPlayerViewController* avpvc;
 @property Script* currentScript;
 @property UIColor* desiredOverlayColor;
+@property UIImageView* overlayImageView;
 //@property UILabel* timeLabel;
 @end
 
@@ -26,6 +27,9 @@
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
+	
+	// Black background.
+	[self.view setBackgroundColor:[UIColor blackColor]];
 	
 	// Create the movie player view controller and add it to the screen.
 	self.avpvc = [[AVPlayerViewController alloc] init];
@@ -105,6 +109,8 @@
 	// Do we need to enable the overlay?
 	[self enableOverlayUsingScript:script];
 	
+	[self enableOffsetUsingScript:script];
+	
 	// Hold on to this.
 	self.currentScript = script;
 }
@@ -131,24 +137,34 @@
 
 - (void)enableOverlayUsingScript:(Script*)script
 {
-	NSNumber* overlayNumber = script.deviceJson[TAG_OVERLAY_ALPHA];
-	if (overlayNumber)
+	NSString* overlayImageName = script.deviceJson[TAG_OVERLAY_IMAGE];
+	if (overlayImageName)
 	{
-		CGFloat overlayAlpha = [overlayNumber floatValue];
-		if (overlayAlpha > 0)
-		{
-			self.desiredOverlayColor = [UIColor colorWithWhite:0 alpha:overlayAlpha];
-		}
-		else
-		{
-			self.desiredOverlayColor = nil;
-		}
+		UIImage* overlayImage = [UIImage imageNamed:overlayImageName];
+		[self.overlayImageView removeFromSuperview];
+		self.overlayImageView = [[UIImageView alloc] initWithImage:overlayImage];
+		[self.avpvc.contentOverlayView addSubview:self.overlayImageView];
 	}
-	else
+}
+
+- (void)enableOffsetUsingScript:(Script*)script
+{
+	CGFloat offsetX = 0;
+	NSNumber* offsetXNumber = script.deviceJson[TAG_OFFSET_X];
+	if (offsetXNumber)
 	{
-		self.desiredOverlayColor = nil;
+		offsetX = [offsetXNumber floatValue];
 	}
-	self.avpvc.contentOverlayView.backgroundColor = self.desiredOverlayColor;
+	
+	CGFloat offsetY = 0;
+	NSNumber* offsetYNumber = script.deviceJson[TAG_OFFSET_Y];
+	if (offsetYNumber)
+	{
+		offsetY = [offsetYNumber floatValue];
+	}
+	
+	CGAffineTransform translate = CGAffineTransformMakeTranslation(offsetX, offsetY);
+	self.avpvc.view.transform = translate;
 }
 
 - (void)flashScreen

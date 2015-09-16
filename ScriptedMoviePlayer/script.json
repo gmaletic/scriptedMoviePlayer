@@ -1,24 +1,28 @@
 {
 	"*" :
 	{
-		"screen-brightness" : 0.1,
-		"seconds-to-cycle" : 20,
+		"seconds-to-cycle" : 22,
 		"foundation-image" : "",
 		"script" :
 		[
 			{
-				"seconds-offset" : 0,
-				"movie" : "eye"
-			}
+				"seconds-offset" : 0.4,
+				"movie" : "eye-20-sec-brighter"
+			},
 		]
 	},
 	"LeftEye" :
 	{
-		"overlay-image" : "leftOverlay",
-		"screen-brightness" : 1.0
+		"overlay-image" : "overlay-left-eye-daytime",
+		"offset-x" : 18,
+		"offset-y" : -50,
+		"screen-brightness" : 0.75
 	},
 	"RightEye" :
 	{
-		"overlay-image" : "rightOverlay"
+		"overlay-image" : "overlay-right-eye-daytime",
+		"offset-x" : -34,
+		"offset-y" : -32,
+		"screen-brightness" : 0.3
 	}
 }
